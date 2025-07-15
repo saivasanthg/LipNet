@@ -1,7 +1,11 @@
-from keras.layers.core import Lambda
-from lipnet.core.loss import ctc_lambda_func
+import tensorflow as tf
+from tensorflow.keras.layers import Layer
 
-# CTC Layer implementation using Lambda layer
-# (because Keras doesn't support extra prams on loss function)
-def CTC(name, args):
-	return Lambda(ctc_lambda_func, output_shape=(1,), name=name)(args)
+class CTC(Layer):
+    def call(self, inputs):
+        y_pred, labels, input_length, label_length = inputs
+
+        # CTC loss expects time major format
+        y_pred = tf.transpose(y_pred, [1, 0, 2])
+
+        return tf.keras.backend.ctc_batch_cost(labels, y_pred, input_length, label_length)
